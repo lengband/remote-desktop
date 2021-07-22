@@ -4,7 +4,7 @@ const {create: createControlWindow, send: sendControlWindow} = require('./window
 
 module.exports = function () {
   ipcMain.handle('login', async () => {
-      return Math.floor(Math.random() * 1000000)
+      return Math.floor(Math.random() * 1000000) + 100000
   })
   ipcMain.on('control', async (e, remote) => {
     // 这里是跟服务端的交互，成功后我们会唤起面板

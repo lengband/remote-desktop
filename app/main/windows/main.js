@@ -8,7 +8,8 @@ function create() {
     height: 300,
     webPreferences: {
       nodeIntegration: true,
-      contextIsolation: false
+      contextIsolation: false,
+      enableRemoteModule: true, // 这里是关键设置
     },
   })
   win.webContents.openDevTools()

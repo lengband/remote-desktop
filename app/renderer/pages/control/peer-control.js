@@ -1,43 +1,46 @@
 const EventEmitter = require('events')
 const peer = new EventEmitter()
-const { ipcRenderer, desktopCapturer } = require('electron')
+const pc = new window.RTCPeerConnection({})
+const { ipcRenderer } = require('electron')
 
-async function getScreenStream() {
-  const sources = await desktopCapturer.getSources({ types: ['screen'] })
+// peer.on('robot', (type, data) => {
+//   console.log('robot', type, data)
+//   if (type === 'mouse') {
+//     data.screen = {
+//       width: window.screen.width,
+//       height: window.screen.height,
+//     }
+//   }
+//   setTimeout(() => {
+//     ipcRenderer.send('robot', type, data)
+//   }, 2000)
+// })
 
-  navigator.webkitGetUserMedia(
-    {
-      audio: false,
-      video: {
-        mandatory: {
-          chromeMediaSource: 'desktop',
-          chromeMediaSourceId: sources[0].id,
-          maxWidth: window.screen.width,
-          maxHeight: window.screen.height,
-        },
-      },
-    },
-    (stream) => {
-      peer.emit('add-stream', stream)
-    },
-    (err) => {
-      console.log(err, 'err')
-    }
-  )
+async function createOffer() {
+  let offer = await pc.createOffer({
+    offerToReceiveAudio: false,
+    offerToReceiveVideo: true
+  })
+  await pc.setLocalDescription(offer)
+  console.log('create-offer\n', JSON.stringify(pc.localDescription))
+  return pc.localDescription
 }
-getScreenStream()
-
-peer.on('robot', (type, data) => {
-  console.log('robot', type, data)
-  if (type === 'mouse') {
-    data.screen = {
-      width: window.screen.width,
-      height: window.screen.height,
-    }
-  }
-  // setTimeout(() => {
-    ipcRenderer.send('robot', type, data)
-  // }, 2000)
+createOffer().then((offer) => {
+  console.log('forward', 'offer', offer)
+  ipcRenderer.send('forward', 'offer', {type: offer.type, sdp: offer.sdp})
 })
+
+async function setRemote(answer) {
+  await pc.setRemoteDescription(answer)
+  console.log('create-answer', pc)
+}
+
+window.setRemote = setRemote;
+
+pc.onaddstream = (e) => {
+	console.log('addstream', e)
+	peer.emit('add-stream', e.stream)
+}
+
 
 module.exports = peer
