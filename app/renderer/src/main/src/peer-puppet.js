@@ -42,6 +42,21 @@ async function createAnswer(offer) {
 
 window.createAnswer = createAnswer;
 
+let candidates = []
+async function addIceCandidate(candidate) {
+  if(candidate) {
+    candidates.push(candidate)
+  }
+  // 设置 candidate 需要等待 pc.remoteDescription 有值时才有效
+  if(pc.remoteDescription && pc.remoteDescription.type) {
+    for(let i = 0; i < candidates.length; i ++) {
+      await pc.addIceCandidate(new RTCIceCandidate(candidates[i]))
+    }
+    candidates = []
+  } 
+}
+window.addIceCandidate = addIceCandidate
+
 
 ipcRenderer.on('offer', (e, offer) => {
   console.log('init pc', offer)
@@ -68,12 +83,6 @@ ipcRenderer.on('offer', (e, offer) => {
     // 告知其他人
     ipcRenderer.send('forward', 'puppet-candidate', e.candidate)
   }
-
-  async function addIceCandidate(candidate) {
-    if (!candidate || !candidate.type) return
-    await pc.addIceCandidate(new RTCIceCandidate(candidate))
-  }
-  window.addIceCandidate = addIceCandidate
 
   
   createAnswer(offer).then((answer) => {

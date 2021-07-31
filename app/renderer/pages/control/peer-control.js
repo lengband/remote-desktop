@@ -45,6 +45,27 @@ async function setRemote(answer) {
 
 window.setRemote = setRemote;
 
+pc.onicecandidate = (e) => {
+	console.log('candidate', JSON.stringify(e.candidate))
+  // ipcRenderer.send('forward', 'control-candidate', e.candidate)
+	// 告知其他人
+}
+
+let candidates = []
+async function addIceCandidate(candidate) {
+  if(candidate) {
+    candidates.push(candidate)
+  }
+  // 设置 candidate 需要等待 pc.remoteDescription 有值时才有效
+  if(pc.remoteDescription && pc.remoteDescription.type) {
+    for(let i = 0; i < candidates.length; i ++) {
+      await pc.addIceCandidate(new RTCIceCandidate(candidates[i]))
+    }
+    candidates = []
+  } 
+}
+window.addIceCandidate = addIceCandidate
+
 pc.onaddstream = (e) => {
 	console.log('addstream', e)
 	peer.emit('add-stream', e.stream)
