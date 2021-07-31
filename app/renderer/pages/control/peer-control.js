@@ -16,6 +16,13 @@ const { ipcRenderer } = require('electron')
 //   }, 2000)
 // })
 
+/**
+ * @description 传输流程如下：
+ * 一：控制端：1、创建RTCPeerConnection 2、发起连接createOffer(得到offer SDP) 3、setLocalDescription(设置offer SDP) 4、将控制端的 offer SDP 发生给 傀儡端
+ * 二：傀儡端：1、创建RTCPeerConnection 2、添加桌面流 3、setRemoteDescription(设置控制端的offer SDP) 4、响应连接createAnswer(得到answer SDP) 5、setLocalDescription(设置answer SDP) 6、将傀儡端的answer SDP发生给控制端
+ * 三：控制端：1、setRemoteDescription(设置控制端answer SDP)
+ * @return {Object} offer SDP 
+ */
 async function createOffer() {
   let offer = await pc.createOffer({
     offerToReceiveAudio: false,
@@ -23,6 +30,7 @@ async function createOffer() {
   })
   await pc.setLocalDescription(offer)
   console.log('create-offer\n', JSON.stringify(pc.localDescription))
+  // 得到控制端的 offer SDP
   return pc.localDescription
 }
 createOffer().then((offer) => {

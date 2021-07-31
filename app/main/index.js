@@ -4,8 +4,8 @@ const { create: createMainWindow } = require('./windows/main')
 const {create: createControlWindow} = require('./windows/control')
 
 app.on('ready', () => {
-  createControlWindow();
-  // createMainWindow();
+  // createControlWindow();
+  createMainWindow();
   handlerIPC();
   require('./robot.js')();
 })
