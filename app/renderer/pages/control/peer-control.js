@@ -3,18 +3,20 @@ const peer = new EventEmitter()
 const pc = new window.RTCPeerConnection({})
 const { ipcRenderer } = require('electron')
 
-// peer.on('robot', (type, data) => {
-//   console.log('robot', type, data)
-//   if (type === 'mouse') {
-//     data.screen = {
-//       width: window.screen.width,
-//       height: window.screen.height,
-//     }
-//   }
-//   setTimeout(() => {
-//     ipcRenderer.send('robot', type, data)
-//   }, 2000)
-// })
+let dc = pc.createDataChannel('robotchannel', { reliable: false })
+console.log('before-opened', dc)
+dc.onopen = function () {
+  console.log('opened')
+  peer.on('robot', (type, data) => {
+    dc.send(JSON.stringify({ type, data }))
+  })
+}
+dc.onmessage = function (event) {
+  console.log('message', event)
+}
+dc.onerror = (e) => {
+  console.log(e)
+}
 
 /**
  * @description 传输流程如下：
@@ -75,21 +77,6 @@ async function addIceCandidate(candidate) {
 pc.onaddstream = (e) => {
   console.log('addstream', e)
   peer.emit('add-stream', e.stream)
-}
-
-let dc = pc.createDataChannel('robotchannel', { reliable: false })
-console.log('before-opened', dc)
-dc.onopen = function () {
-  console.log('opened')
-  peer.on('robot', (type, data) => {
-    dc.send(JSON.stringify({ type, data }))
-  })
-}
-dc.onmessage = function (event) {
-  console.log('message', event)
-}
-dc.onerror = (e) => {
-  console.log(e)
 }
 
 module.exports = peer

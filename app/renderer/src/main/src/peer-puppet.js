@@ -58,22 +58,6 @@ ipcRenderer.on('candidate', (e, candidate) => {
   addIceCandidate(candidate)
 })
 
-pc.ondatachannel = (e) => {
-  console.log('data', e)
-  e.channel.onmessage = (e) => {
-    console.log('onmessage', e, JSON.parse(e.data))
-    let { type, data } = JSON.parse(e.data)
-    console.log('robot', type, data)
-    if (type === 'mouse') {
-      data.screen = {
-        width: window.screen.width,
-        height: window.screen.height,
-      }
-    }
-    ipcRenderer.send('robot', type, data)
-  }
-}
-
 pc.onicecandidate = (e) => {
   if (e.candidate) {
     const candidate = JSON.parse(JSON.stringify(e.candidate))
@@ -104,4 +88,5 @@ ipcRenderer.on('offer', async (e, offer) => {
     }
   }
 })
+
 export default peer

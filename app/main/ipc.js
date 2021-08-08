@@ -41,13 +41,11 @@ module.exports = function () {
 
   // 收到傀儡端的candidate，转发给 控制端
   signal.on('puppet-candidate', (data) => {
-    console.log('on puppet-candidate:', {data});
     sendControlWindow('candidate', data)
   })
 
   // 收到控制端的candidate，转发给傀儡端
   signal.on('control-candidate', (data) => {
-    console.log('on control-candidate:', {data});
     sendMainWindow('candidate', data)
   })
 }
