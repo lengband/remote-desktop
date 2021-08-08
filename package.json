@@ -1,5 +1,5 @@
 {
-  "name": "remote-app",
+  "name": "Cerise",
   "version": "1.0.0",
   "description": "",
   "main": "app/main/index.js",
@@ -8,10 +8,12 @@
     "start:main": "electron .",
     "start:render": "cd app/renderer/src/main && npm run start"
   },
-  "author": "",
+  "author": "lengband",
   "license": "ISC",
   "dependencies": {
+    "about-window": "^1.14.0",
     "electron": "^13.0.1",
+    "electron-about-window": "^1.14.0",
     "electron-is-dev": "^2.0.0",
     "robotjs": "^0.6.0",
     "vkey": "^1.0.1",

@@ -2,6 +2,9 @@ const { BrowserWindow } = require('electron')
 const isDev = require('electron-is-dev')
 const path = require('path')
 
+let win;
+let willQuitApp = false;
+
 function create() {
   win = new BrowserWindow({
     width: 600,
@@ -12,7 +15,17 @@ function create() {
       enableRemoteModule: true, // 这里是关键设置
     },
   })
-  win.webContents.openDevTools()
+  win.webContents.openDevTools();
+  
+  // 窗口假关闭
+  win.on('close', (e) => {
+    if (willQuitApp) {
+        win = null;
+    } else {
+        e.preventDefault();
+        win.hide();
+    }
+})
   if (isDev) {
     win.loadURL('http://localhost:3000')
   } else {
