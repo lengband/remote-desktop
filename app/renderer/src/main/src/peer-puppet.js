@@ -38,20 +38,20 @@ async function createAnswer(offer) {
   return pc.localDescription
 }
 
-window.createAnswer = createAnswer;
+window.createAnswer = createAnswer
 
 let candidates = []
 async function addIceCandidate(candidate) {
-  if(candidate) {
+  if (candidate) {
     candidates.push(candidate)
   }
   // 设置 candidate 需要等待 pc.remoteDescription 有值时才有效
-  if(pc.remoteDescription && pc.remoteDescription.type) {
-    for(let i = 0; i < candidates.length; i ++) {
+  if (pc.remoteDescription && pc.remoteDescription.type) {
+    for (let i = 0; i < candidates.length; i++) {
       await pc.addIceCandidate(new RTCIceCandidate(candidates[i]))
     }
     candidates = []
-  } 
+  }
 }
 
 ipcRenderer.on('candidate', (e, candidate) => {
@@ -82,10 +82,26 @@ pc.onicecandidate = (e) => {
 }
 
 ipcRenderer.on('offer', async (e, offer) => {
-  let answer = await createAnswer(offer);
+  let answer = await createAnswer(offer)
   ipcRenderer.send('forward', 'answer', {
     type: answer.type,
     sdp: answer.sdp,
   })
+
+  pc.ondatachannel = (e) => {
+    console.log('ondatachannel: ', e)
+    e.channel.onmessage = (e) => {
+      console.log('onmessage', e, JSON.parse(e.data))
+      let { type, data } = JSON.parse(e.data)
+      console.log('robot', {type, data})
+      if (type === 'mouse') {
+        data.screen = {
+          width: window.screen.width,
+          height: window.screen.height,
+        }
+      }
+      ipcRenderer.send('robot', type, data)
+    }
+  }
 })
 export default peer
