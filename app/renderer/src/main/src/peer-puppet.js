@@ -35,8 +35,6 @@ async function createAnswer(offer) {
   pc.addStream(stream)
   await pc.setRemoteDescription(offer)
   await pc.setLocalDescription(await pc.createAnswer())
-  console.log('create answer \n', JSON.stringify(pc.localDescription))
-  // send answer
   return pc.localDescription
 }
 
@@ -55,41 +53,39 @@ async function addIceCandidate(candidate) {
     candidates = []
   } 
 }
-window.addIceCandidate = addIceCandidate
 
+ipcRenderer.on('candidate', (e, candidate) => {
+  addIceCandidate(candidate)
+})
 
-ipcRenderer.on('offer', (e, offer) => {
-  console.log('init pc', offer)
-
-  pc.ondatachannel = (e) => {
-    console.log('data', e)
-    e.channel.onmessage = (e) => {
-      console.log('onmessage', e, JSON.parse(e.data))
-      let { type, data } = JSON.parse(e.data)
-      console.log('robot', type, data)
-      if (type === 'mouse') {
-        data.screen = {
-          width: window.screen.width,
-          height: window.screen.height,
-        }
+pc.ondatachannel = (e) => {
+  console.log('data', e)
+  e.channel.onmessage = (e) => {
+    console.log('onmessage', e, JSON.parse(e.data))
+    let { type, data } = JSON.parse(e.data)
+    console.log('robot', type, data)
+    if (type === 'mouse') {
+      data.screen = {
+        width: window.screen.width,
+        height: window.screen.height,
       }
-      ipcRenderer.send('robot', type, data)
     }
+    ipcRenderer.send('robot', type, data)
   }
+}
 
-  
-
-  pc.onicecandidate = (e) => {
-    // 告知其他人
-    ipcRenderer.send('forward', 'puppet-candidate', e.candidate)
+pc.onicecandidate = (e) => {
+  if (e.candidate) {
+    const candidate = JSON.parse(JSON.stringify(e.candidate))
+    ipcRenderer.send('forward', 'puppet-candidate', candidate)
   }
+}
 
-  
-  createAnswer(offer).then((answer) => {
-    ipcRenderer.send('forward', 'answer', {
-      type: answer.type,
-      sdp: answer.sdp,
-    })
+ipcRenderer.on('offer', async (e, offer) => {
+  let answer = await createAnswer(offer);
+  ipcRenderer.send('forward', 'answer', {
+    type: answer.type,
+    sdp: answer.sdp,
   })
 })
 export default peer

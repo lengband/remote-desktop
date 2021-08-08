@@ -38,17 +38,24 @@ createOffer().then((offer) => {
   ipcRenderer.send('forward', 'offer', {type: offer.type, sdp: offer.sdp})
 })
 
+ipcRenderer.on('answer', (e, answer) => {
+  setRemote(answer)
+})
+
+ipcRenderer.on('candidate', (e, candidate) => {
+  addIceCandidate(candidate)
+})
+
 async function setRemote(answer) {
   await pc.setRemoteDescription(answer)
   console.log('create-answer', pc)
 }
 
-window.setRemote = setRemote;
-
 pc.onicecandidate = (e) => {
-	console.log('candidate', JSON.stringify(e.candidate))
-  // ipcRenderer.send('forward', 'control-candidate', e.candidate)
-	// 告知其他人
+  if (e.candidate) {
+    const candidate = JSON.parse(JSON.stringify(e.candidate))
+    ipcRenderer.send('forward', 'control-candidate', candidate)
+  }
 }
 
 let candidates = []
@@ -58,13 +65,12 @@ async function addIceCandidate(candidate) {
   }
   // 设置 candidate 需要等待 pc.remoteDescription 有值时才有效
   if(pc.remoteDescription && pc.remoteDescription.type) {
-    for(let i = 0; i < candidates.length; i ++) {
+    for(let i = 0; i < candidates.length; i++) {
       await pc.addIceCandidate(new RTCIceCandidate(candidates[i]))
     }
     candidates = []
   } 
 }
-window.addIceCandidate = addIceCandidate
 
 pc.onaddstream = (e) => {
 	console.log('addstream', e)
