@@ -10,6 +10,10 @@ node_modules
 
 # production
 /build
+release/*
+app/renderer/pages/main/
+
+
 
 
 # misc
